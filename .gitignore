@@ -1,0 +1,24 @@
+# Environments
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Environment variables
+.env
+
+# __pycache__
+__pycache__/
+*.py[cod]
+*$py.class
+*/__pycache__/
+*/*/__pycache__/
+
+# Instance folder
+instance/
+
+# OS generated files
+.DS_Store
+Thumbs.db
