@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6 d-flex align-items-center mb-3 mb-md-0">
+        <!-- 記帳本標題與切換 -->
+        <h2 class="mb-0 me-3 fw-bold text-dark">{{ current_ledger.name }}</h2>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle btn-sm shadow-sm" type="button" id="ledgerDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                切換記帳本
+            </button>
+            <ul class="dropdown-menu shadow" aria-labelledby="ledgerDropdown">
+                {% for l in ledgers %}
+                <li>
+                    <form action="{{ url_for('ledger_bp.switch_ledger', id=l.id) }}" method="POST" style="display:inline;">
+                        <button class="dropdown-item {% if l.id == current_ledger.id %}active bg-primary text-white{% endif %}" type="submit">{{ l.name }}</button>
+                    </form>
+                </li>
+                {% endfor %}
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-primary" href="{{ url_for('ledger_bp.new_ledger') }}">+ 新增記帳本</a></li>
+                <li>
+                    <form action="{{ url_for('ledger_bp.delete_ledger', id=current_ledger.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('警告：這將會刪除整本記帳本與裡面所有的明細！\n確定要刪除嗎？');">
+                        <button class="dropdown-item text-danger" type="submit">刪除這個記帳本</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="col-md-6 text-md-end d-flex justify-content-md-end gap-2">
+        <a href="{{ url_for('tx_bp.export_transactions') }}" class="btn btn-outline-success shadow-sm">匯出 CSV</a>
+        <a href="{{ url_for('tx_bp.new_transaction') }}" class="btn btn-primary shadow-sm fw-bold px-4">+ 記錄一筆</a>
+    </div>
+</div>
+
+<!-- 統計卡片 -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-white border-0 shadow-sm text-center mb-3 h-100">
+            <div class="card-body py-4">
+                <h6 class="card-title text-secondary mb-1">總收入</h6>
+                <h2 class="mb-0 text-success fw-bold">${{ "{:,.0f}".format(total_income) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-white border-0 shadow-sm text-center mb-3 h-100">
+            <div class="card-body py-4">
+                <h6 class="card-title text-secondary mb-1">總支出</h6>
+                <h2 class="mb-0 text-danger fw-bold">${{ "{:,.0f}".format(total_expense) }}</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-primary text-white border-0 shadow-sm text-center mb-3 h-100">
+            <div class="card-body py-4">
+                <h6 class="card-title text-white-50 mb-1">目前結餘</h6>
+                <h2 class="mb-0 fw-bold">${{ "{:,.0f}".format(balance) }}</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 收支明細列表 -->
+<div class="card shadow-sm border-0 mb-5">
+    <div class="card-header bg-white pt-3 pb-2 border-bottom-0">
+        <h5 class="mb-0 text-secondary fw-bold">收支明細</h5>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th scope="col" class="ps-4">日期</th>
+                    <th scope="col">類型</th>
+                    <th scope="col">分類</th>
+                    <th scope="col">備註</th>
+                    <th scope="col" class="text-end">金額</th>
+                    <th scope="col" class="text-center pe-4">操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for tx in transactions %}
+                <tr>
+                    <td class="ps-4 text-muted">{{ tx.date }}</td>
+                    <td>
+                        {% if tx.type == 'income' %}
+                        <span class="badge bg-success-subtle text-success py-1 px-2 border border-success border-opacity-25 rounded-pill">收入</span>
+                        {% else %}
+                        <span class="badge bg-danger-subtle text-danger py-1 px-2 border border-danger border-opacity-25 rounded-pill">支出</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="text-dark fw-medium">
+                             {{ cat_dict.get(tx.category_id, '未知分類') }}
+                        </span>
+                    </td>
+                    <td class="text-secondary">{{ tx.description }}</td>
+                    <td class="text-end fw-bold fs-5 {% if tx.type == 'income' %}text-success{% else %}text-danger{% endif %}">
+                        {% if tx.type == 'income' %}+{% else %}-{% endif %}${{ "{:,.0f}".format(tx.amount) }}
+                    </td>
+                    <td class="text-center pe-4">
+                        <a href="{{ url_for('tx_bp.edit_transaction', id=tx.id) }}" class="btn btn-sm btn-light text-primary fw-bold shadow-sm border me-1">編輯</a>
+                        <form action="{{ url_for('tx_bp.delete_transaction', id=tx.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('確定要刪除這筆紀錄嗎？');">
+                            <button type="submit" class="btn btn-sm btn-white text-danger fw-bold border shadow-sm">刪除</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="text-center py-5">
+                        <div class="my-4">
+                            <h5 class="text-muted mb-3">目前沒有任何紀錄</h5>
+                            <a href="{{ url_for('tx_bp.new_transaction') }}" class="btn btn-primary">+ 新增第一筆收支</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

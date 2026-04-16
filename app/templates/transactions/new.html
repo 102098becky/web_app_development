@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow mt-4 border-0">
+            <div class="card-header bg-white border-bottom-0 pt-4 pb-0">
+                <h4 class="mb-0 text-center fw-bold text-primary">新增新收支明細</h4>
+            </div>
+            <div class="card-body p-4">
+                <form action="{{ url_for('tx_bp.create_transaction') }}" method="POST">
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6 mb-3 mb-md-0">
+                            <label class="form-label text-secondary">收支類型 <span class="text-danger">*</span></label>
+                            <select class="form-select bg-light border-0 py-2" name="type" id="typeSelect" required>
+                                <option value="expense" selected>支出 (Expense)</option>
+                                <option value="income">收入 (Income)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label text-secondary">日期 <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control bg-light border-0 py-2" name="date" value="{{ today }}" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-secondary">分類 <span class="text-danger">*</span></label>
+                        <select class="form-select bg-light border-0 py-2" name="category_id" required>
+                            <option value="" disabled selected>請選擇對應的分類...</option>
+                            {% for c in categories %}
+                            <option value="{{ c.id }}" data-type="{{ c.type }}">{{ c.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label text-secondary">金額 ($) <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control form-control-lg bg-light border-0 text-end fw-bold text-dark" name="amount" min="0" step="0.01" placeholder="0" required autofocus>
+                    </div>
+
+                    <div class="mb-5">
+                        <label class="form-label text-secondary">備註 (選填)</label>
+                        <input type="text" class="form-control bg-light border-0 py-2" name="description" placeholder="填寫記錄的詳細內容...">
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg shadow-sm">儲存紀錄</button>
+                        <a href="{{ url_for('tx_bp.dashboard') }}" class="btn btn-light border">取消並回首頁</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const typeSelect = document.getElementById('typeSelect');
+    const categorySelect = document.querySelector('select[name="category_id"]');
+    const options = Array.from(categorySelect.options).filter(opt => opt.value !== "");
+
+    function updateCategories() {
+        const selectedType = typeSelect.value;
+        categorySelect.value = "";
+        options.forEach(opt => {
+            if (opt.getAttribute('data-type') === selectedType) {
+                opt.style.display = '';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+    }
+
+    typeSelect.addEventListener('change', updateCategories);
+    updateCategories();
+});
+</script>
+{% endblock %}

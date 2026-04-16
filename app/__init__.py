@@ -9,13 +9,11 @@ def create_app():
         DATABASE=os.path.join(app.instance_path, 'database.db'),
     )
 
-    # 確保 instance 資料夾存在
     try:
         os.makedirs(app.instance_path)
     except OSError:
         pass
 
-    # 註冊 Blueprints
     from app.routes.ledger_routes import ledger_bp
     from app.routes.tx_routes import tx_bp
 
@@ -31,5 +29,18 @@ def init_db():
         db = sqlite3.connect(app.config['DATABASE'])
         with open('database/schema.sql', 'r', encoding='utf-8') as f:
             db.executescript(f.read())
+            
+        cur = db.execute("SELECT count(*) FROM categories")
+        if cur.fetchone()[0] == 0:
+            db.executescript("""
+                INSERT INTO categories (name, type, is_default) VALUES ('餐飲', 'expense', 1);
+                INSERT INTO categories (name, type, is_default) VALUES ('交通', 'expense', 1);
+                INSERT INTO categories (name, type, is_default) VALUES ('購物', 'expense', 1);
+                INSERT INTO categories (name, type, is_default) VALUES ('娛樂', 'expense', 1);
+                INSERT INTO categories (name, type, is_default) VALUES ('水電網路', 'expense', 1);
+                INSERT INTO categories (name, type, is_default) VALUES ('薪資', 'income', 1);
+                INSERT INTO categories (name, type, is_default) VALUES ('獎金', 'income', 1);
+                INSERT INTO categories (name, type, is_default) VALUES ('投資', 'income', 1);
+            """)
         db.commit()
-    print("Database Initialized Successfully.")
+    print("Database Initialized Successfully with categories.")
