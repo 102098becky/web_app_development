@@ -1,0 +1,25 @@
+CREATE TABLE IF NOT EXISTS ledgers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    type TEXT NOT NULL,
+    is_default BOOLEAN NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS transactions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    ledger_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    amount REAL NOT NULL,
+    date TEXT NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(ledger_id) REFERENCES ledgers(id),
+    FOREIGN KEY(category_id) REFERENCES categories(id)
+);
